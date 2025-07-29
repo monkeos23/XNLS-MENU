@@ -1,0 +1,267 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+	Name = "XNLS Cheat menu",
+	LoadingTitle = "XNLS",
+	LoadingSubtitle = "by XNLS",
+	ConfigurationSaving = {
+		Enabled = false,
+		FolderName = nil, -- Create a custom folder for your hub/game
+		FileName = "Example Hub"
+	},
+	Discord = {
+		Enabled = false,
+		Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
+		RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+	},
+	KeySystem = false, -- Set this to true to use our key system
+	KeySettings = {
+		Title = "Key | Youtube Hub",
+		Subtitle = "Key System",
+		Note = "Key In Discord Server",
+		FileName = "YoutubeHubKey1", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+		SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+		GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+		Key = {"https://pastebin.com/raw/AtgzSPWK"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+	}
+})
+
+local MainTab = Window:CreateTab("🏠 Home", nil) -- Title, Image
+local MainSection = MainTab:CreateSection("Main")
+
+Rayfield:Notify({
+	Title = "You executed the script",
+	Content = "Very cool gui",
+	Duration = 5,
+	Image = 13047715178,
+	Actions = { -- Notification Buttons
+		Ignore = {
+			Name = "Okay!",
+			Callback = function()
+				print("The user tapped Okay!")
+			end
+		},
+	},
+})
+
+local Button = MainTab:CreateButton({
+	Name = "Infinite Jump Toggle",
+	Callback = function()
+		--Toggles the infinite jump between on or off on every script run
+		_G.infinjump = not _G.infinjump
+
+		if _G.infinJumpStarted == nil then
+			--Ensures this only runs once to save resources
+			_G.infinJumpStarted = true
+
+			--Notifies readiness
+			game.StarterGui:SetCore("SendNotification", {Title="Youtube Hub"; Text="Infinite Jump Activated!"; Duration=5;})
+
+			--The actual infinite jump
+			local plr = game:GetService('Players').LocalPlayer
+			local m = plr:GetMouse()
+			m.KeyDown:connect(function(k)
+				if _G.infinjump then
+					if k:byte() == 32 then
+						humanoid = game:GetService'Players'.LocalPlayer.Character:FindFirstChildOfClass('Humanoid')
+						humanoid:ChangeState('Jumping')
+						wait()
+						humanoid:ChangeState('Seated')
+					end
+				end
+			end)
+		end
+	end,
+})
+
+local Slider = MainTab:CreateSlider({
+	Name = "WalkSpeed Slider",
+	Range = {1, 350},
+	Increment = 1,
+	Suffix = "Speed",
+	CurrentValue = 16,
+	Flag = "sliderws", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Value)
+		game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = (Value)
+	end,
+})
+
+local Slider = MainTab:CreateSlider({
+	Name = "JumpPower Slider",
+	Range = {1, 350},
+	Increment = 1,
+	Suffix = "Speed",
+	CurrentValue = 16,
+	Flag = "sliderjp", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Value)
+		game.Players.LocalPlayer.Character.Humanoid.JumpPower = (Value)
+	end,
+})
+
+local Dropdown = MainTab:CreateDropdown({
+	Name = "Select Area",
+	Options = {"Starter World","Pirate Island","Pineapple Paradise"},
+	CurrentOption = {"Starter World"},
+	MultipleOptions = false,
+	Flag = "dropdownarea", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Option)
+		print(Option)
+	end,
+})
+
+local Input = MainTab:CreateInput({
+	Name = "Walkspeed",
+	PlaceholderText = "1-500",
+	RemoveTextAfterFocusLost = true,
+	Callback = function(Text)
+		game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = (Text)
+	end,
+})
+
+local OtherSection = MainTab:CreateSection("Other")
+
+local Toggle = MainTab:CreateToggle({
+	Name = "Fly",
+	CurrentValue = false,
+	Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Value)
+		local Players = game:GetService("Players")
+		local RunService = game:GetService("RunService")
+		local UserInputService = game:GetService("UserInputService")
+
+		local player = Players.LocalPlayer
+		local character = player.Character or player.CharacterAdded:Wait()
+		local hrp = nil
+
+		-- Re-check until HRP exists
+		repeat
+			character = player.Character or player.CharacterAdded:Wait()
+			hrp = character:FindFirstChild("HumanoidRootPart")
+			task.wait()
+		until hrp
+
+		-- Flying controls
+		local control = {
+			F = 0, B = 0, L = 0, R = 0, U = 0, D = 0
+		}
+		local flySpeed = 60
+
+		-- Set up body movers
+		local bodyGyro = Instance.new("BodyGyro")
+		bodyGyro.P = 9e4
+		bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+		bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+		bodyGyro.Parent = hrp
+
+		local bodyVel = Instance.new("BodyVelocity")
+		bodyVel.Velocity = Vector3.zero
+		bodyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+		bodyVel.Parent = hrp
+
+		-- Start flying
+		RunService:BindToRenderStep("FlyUpdate", Enum.RenderPriority.Input.Value, function()
+			local cam = workspace.CurrentCamera
+			local direction = Vector3.new(
+				control.L + control.R,
+				control.U + control.D,
+				control.B + control.F
+			)
+
+			if direction.Magnitude > 0 then
+				direction = direction.Unit
+			end
+
+			local flyVector = cam.CFrame:VectorToWorldSpace(direction) * flySpeed
+			bodyVel.Velocity = flyVector
+			bodyGyro.CFrame = cam.CFrame
+		end)
+
+		-- Controls
+		UserInputService.InputBegan:Connect(function(input, gameProcessed)
+			if gameProcessed then return end
+			local key = input.KeyCode
+
+			if key == Enum.KeyCode.W then control.F = 1 end
+			if key == Enum.KeyCode.S then control.B = -1 end
+			if key == Enum.KeyCode.A then control.L = -1 end
+			if key == Enum.KeyCode.D then control.R = 1 end
+			if key == Enum.KeyCode.Space then control.U = 1 end
+			if key == Enum.KeyCode.LeftShift then control.D = -1 end
+		end)
+
+		UserInputService.InputEnded:Connect(function(input)
+			local key = input.KeyCode
+
+			if key == Enum.KeyCode.W then control.F = 0 end
+			if key == Enum.KeyCode.S then control.B = 0 end
+			if key == Enum.KeyCode.A then control.L = 0 end
+			if key == Enum.KeyCode.D then control.R = 0 end
+			if key == Enum.KeyCode.Space then control.U = 0 end
+			if key == Enum.KeyCode.LeftShift then control.D = 0 end
+		end)
+	end,
+})
+
+local Toggle = MainTab:CreateToggle({
+	Name = "Esp",
+	CurrentValue = false,
+	Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Value)
+		-- LocalScript (StarterPlayerScripts or StarterGui)
+		local Players = game:GetService("Players")
+		local localPlayer = Players.LocalPlayer
+
+		function addESP(target)
+			if target == localPlayer then return end
+			local highlight = Instance.new("Highlight")
+			highlight.Name = "ESP_Highlight"
+			highlight.FillColor = Color3.fromRGB(255, 0, 0)
+			highlight.OutlineColor = Color3.new(1, 1, 1)
+			highlight.OutlineTransparency = 0
+			highlight.FillTransparency = 0.5
+			highlight.Adornee = target.Character
+			highlight.Parent = target.Character
+		end
+
+		function setupPlayer(player)
+			player.CharacterAdded:Connect(function()
+				repeat wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+				wait(1) -- Give time to load
+				addESP(player)
+			end)
+		end
+
+		-- Setup existing players
+		for _, player in pairs(Players:GetPlayers()) do
+			setupPlayer(player)
+		end
+
+		-- Setup new players
+		Players.PlayerAdded:Connect(setupPlayer)
+	end,
+})
+
+local TPTab = Window:CreateTab("🏝 Teleports", nil) -- Title, Image
+
+local Button1 = TPTab:CreateButton({
+	Name = "Starter Island",
+	Callback = function()
+		--Teleport1
+	end,
+})
+
+local Button2 = TPTab:CreateButton({
+	Name = "Pirate Island",
+	Callback = function()
+		--Teleport2
+	end,
+})
+
+local Button3 = TPTab:CreateButton({
+	Name = "Pineapple Paradise",
+	Callback = function()
+		--Teleport3
+	end,
+})
+
+local TPTab = Window:CreateTab("🎲 Misc", nil) -- Title, Image
